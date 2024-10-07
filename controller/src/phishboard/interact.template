@@ -1,0 +1,132 @@
+<?php
+$url = "---sUrl---";
+$accesstoken = "---accessToken---";
+$statefile = "/etc/targets.json";
+
+function GET($var)  { return isset($_GET[$var])  ? htmlspecialchars($_GET[$var])  : null; }
+function POST($var) { return isset($_POST[$var]) ? htmlspecialchars($_POST[$var]) : null; }
+
+function lookupUserId($id) {
+        global $statefile;
+
+        if(($json = file_get_contents($statefile)) !== false) {
+                $state = json_decode($json, true);
+
+                if(is_array($state)) {
+                        foreach($state as $s) {
+                                if($s["reqid"] === $id) return $s["userid"];
+                        }
+                }
+        } else {
+                echo "[!] Could not read state file.";
+        }
+}
+
+if(isset($_GET["svr"]) && isset($_GET["reqid"])) {
+	$sid = GET("svr");
+	$reqid = GET("reqid");
+} else {
+	echo "[!] Error: parameter missing";
+	exit(1);
+}
+?><!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>s<?= $sid ?> (<?= $reqid ?>)</title>
+	<style>
+	* { margin: 0; padding: 0; }
+	html {
+		background: black;
+		color: white;
+		font-family: monospace;
+		font-size: 16pt;
+		font-weight: bold;
+		border-top: 4px solid #83af00;
+	}
+	html, body {
+		height: 100%;
+	}
+	#bar {
+		width: 100%;
+		height: 42px;
+		background: black;
+		text-align: center;
+	}
+	#bar h1, #bar p {
+		display: inline;
+	}
+	#bar h1 {
+		font-size: 100%;
+	}
+	#bar p {
+		font-size: 80%;
+	}
+	#bar button {
+		padding: 4px 10px;
+		margin: 4px 0 4px 20px;
+		border: 1px solid #c00;
+		background: transparent;
+		color: #c00;
+		text-transform: uppercase;
+		font-size: 100%;
+		cursor: pointer;
+	}
+	#bar button:hover {
+		background: #c00;
+		color: black;
+	}
+	#bar button.dis,
+	#bar button.dis:hover {
+		color: #333;
+		border: 1px solid #333;
+		background: transparent;
+		cursor: default;;
+	}
+	iframe {
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+
+	</style>
+</head>
+<body>
+<div id="bar">
+	<h1>Server s<?=$sid?> (<?= $reqid . ", " . lookupUserId($reqid) ?>)</h1>
+	<button onclick="reset(this);">reset</button>
+	<button onclick="block(this);">block+reset</button>
+</div>
+
+<iframe id="ifr" src="<?= $url . "?accesstoken=$accesstoken&svr=$sid" ?>" title="novnc view">
+</iframe>
+
+<script>
+// send reset signal
+function reset(btn) {
+	let xhr = new XMLHttpRequest();
+	const url = window.location.href.replace("interact.php", "index.php") + "&reset=1";
+
+	xhr.open("GET", url);
+	xhr.send();
+
+	btn.classList.add("dis");
+	btn.onclick = null;
+}
+                                                                                                                                                                                                                                               
+// send signal to block user                                                                                                                                                                                                                   
+function block() {                                                                                                                                                                                                                             
+        let xhr = new XMLHttpRequest();                                                                                                                                                                                                        
+        const url = window.location.href.replace("interact.php", "index.php") + "&block=1";                                                                                                                                                    
+                                                                                                                                                                                                                                               
+        xhr.open("GET", url);                                                                                                                                                                                                                  
+        xhr.send();                                                                                                                                                                                                                            
+                                                                                                                                                                                                                                               
+        btn.classList.add("dis");                                                                                                                                                                                                              
+        btn.onclick = null;                                                                                                                                                                                                                    
+}
+</script>
+</body>
+</html>
+

@@ -21,7 +21,7 @@ Weaponized EvilnoVNC: scalable and semi-automated MFA-Phishing via "browser-in-t
 
 ## Technical Overview
 
-![architecure](img/arch.png)
+<img src="img/arch.png" alt="arch" width="500" />
 
 * Running on multiple Docker containers with internal networking
 * HAproxy used as loadbalancer and gatekeeper

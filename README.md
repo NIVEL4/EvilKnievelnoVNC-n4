@@ -4,7 +4,8 @@ Weaponized EvilnoVNC: scalable and semi-automated MFA-Phishing via "browser-in-t
 
 ![Logo](img/logo.png)
 
-Features:
+## Features
+
 * concurrent [EvilnoVNC](https://github.com/JoelGMSec/EvilnoVNC) instances, as many as your server can handle
 * access to EvilnoVNC sessions is limited to generated URLs with random victim-specific identifier in parameter
 * auto block users after successful authentication, presenting an arbitrary message/page

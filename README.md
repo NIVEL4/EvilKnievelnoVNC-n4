@@ -50,7 +50,7 @@ Weaponized EvilnoVNC: scalable and semi-automated MFA-Phishing via "browser-in-t
 
 ## Usage
 
-* when running EvilKnievelnoVNC the admin dashboard is reachable via the defined URL and basic auth credentials
+* when running EvilKnievelnoVNC the admin dashboard is reachable via the defined URL and basic auth credentials (<URL>/phishboard)
 * by default a self-signed TLS certificate will be presented (CN: testing-server) with the following fingerprints
     * sha1 `AE:28:1B:05:5B:C0:55:41:22:DA:7C:6F:D2:51:8D:D1:11:B2:7C:21`
     * sha256 `D0:B6:9D:86:6D:AE:B4:E1:CA:F0:C1:F5:4D:82:45:7E:13:06:CD:1A:DE:49:A3:80:DC:21:6A:5C:A8:F4:84:1B`

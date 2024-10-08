@@ -32,6 +32,11 @@ export USERA=$(head -1 /home/user/tmp/useragent$SID.txt)
 # remove X display lock
 sudo rm -f /tmp/.X${DISPLAY#:}-lock
 
+# write resolution to chromium.conf and add custom profile dir
+#IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s/1280,720/${arr[0]},${arr[1]}/" /etc/chromium/chromium.conf
+#IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s/--window-size=[0-9]*,[0-9]*/--window-size=${arr[0]},${arr[1]}/" /etc/chromium/chromium.conf
+IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s#--window-size=[0-9]*,[0-9]*#--window-size=${arr[0]},${arr[1]} --user-data-dir=/home/user/Chrome#" /etc/chromium/chromium.conf
+
 # start kiosk.sh in background
 #/bin/bash -c "/home/user/kiosk.sh" &
 /bin/bash /home/user/kiosk.sh "$USERA" &
@@ -66,11 +71,6 @@ nohup /usr/bin/Xvfb $DISPLAY -screen 0 $RESOLUTION -ac +extension GLX +render -n
 
 # wait until X display is created
 while [[ ! $(xdpyinfo -display $DISPLAY 2> /dev/null) ]]; do sleep .3; done
-
-# write resolution to chromium.conf and add custom profile dir
-#IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s/1280,720/${arr[0]},${arr[1]}/" /etc/chromium/chromium.conf
-#IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s/--window-size=[0-9]*,[0-9]*/--window-size=${arr[0]},${arr[1]}/" /etc/chromium/chromium.conf
-IFS=x read -ra arr <<< "$RESOLUTION" && sudo sed -i "s#--window-size=[0-9]*,[0-9]*#--window-size=${arr[0]},${arr[1]} --user-data-dir=/home/user/Chrome#" /etc/chromium/chromium.conf
 
 # start X server with chromium (quicker start in kiosk.sh)
 #nohup startx chromium &

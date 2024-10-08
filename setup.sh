@@ -88,7 +88,7 @@ mkdir -p Loot
 chmod 777 Loot
 
 ## set permissions
-chmod a+w *log.txt targets.json
+chmod a+w *log.txt targets.json haproxy/*list.acl
 
 ## build run.sh from template
 cp run-template.sh $run

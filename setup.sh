@@ -83,6 +83,13 @@ command -v docker   >/dev/null || { echo "[!] docker missing as dependency, exit
 command -v realpath >/dev/null || { echo "[!] realpath missing as dependency, exiting"; exit 1; }
 command -v bash	    >/dev/null || { echo "[!] bash missing as dependency, exiting"; exit 1; }
 
+## prepare Loot dir
+mkdir -p Loot
+chmod 777 Loot
+
+## set permissions
+chmod a+w *log.txt targets.json
+
 ## build run.sh from template
 cp run-template.sh $run
 chmod +x $run

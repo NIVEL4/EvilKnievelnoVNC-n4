@@ -104,7 +104,6 @@ sed -i "s#---tUrl---#$tUrl#" $erun
 ## build haproxy config from template
 cp haproxy/haproxy-template.cfg $cfg
 sed -i "s/---adminPass---/$adminPass/" $cfg
-sed -i "s/---adminPort---/$adminPort/" $cfg
 sed -i "s/---accessToken---/$accessToken/" $cfg
 sed -i "s/---cookieKey---/$cookieKey/" $cfg
 

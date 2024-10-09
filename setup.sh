@@ -54,7 +54,7 @@ dash2="controller/src/phishboard/interact.php"
 ## CLEANUP
 
 # usage: ./setup clean
-if [ $1 = "clean" ]; then
+if [ "$1" == "clean" ]; then
 	echo "[*] Cleaning up..."
 	rm -f $run && echo ./$run
 	rm -f $erun && echo $erun

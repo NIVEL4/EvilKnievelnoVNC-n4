@@ -13,9 +13,9 @@ RUN rm -rf /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 RUN ln -s /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 
 # PROD:
-RUN echo 'CHROMIUM_FLAGS="--window-size=1280,720 --window-position=0,0 --no-first-run --enable-experimental-extension-apis --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --kiosk --no-sandbox --password-store=basic --start-fullscreen --noerrdialogs --load-extension=/home/user/extension/,/home/user/kiosk/ --ignore-certificate-errors"' >> /etc/chromium/chromium.conf
+RUN echo 'CHROMIUM_FLAGS="--window-size=1280,720 --window-position=0,0 --no-first-run --enable-experimental-extension-apis --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --kiosk --no-sandbox --password-store=basic --start-fullscreen --noerrdialogs --load-extension=/home/user/extension/,/home/user/kiosk/ --ignore-certificate-errors --guest"' >> /etc/chromium/chromium.conf
 # TEST (show Chromium GUI + DevTools):
-#RUN echo 'CHROMIUM_FLAGS="--window-size=1280,720 --window-position=0,0 --no-first-run --enable-experimental-extension-apis --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --no-sandbox --password-store=basic --noerrdialogs --load-extension=/home/user/extension/,/home/user/kiosk/ --ignore-certificate-errors --auto-open-devtools-for-tabs"' >> /etc/chromium/chromium.conf
+#RUN echo 'CHROMIUM_FLAGS="--window-size=1280,720 --window-position=0,0 --no-first-run --enable-experimental-extension-apis --disable-gpu --disable-software-rasterizer --disable-dev-shm-usage --no-sandbox --password-store=basic --noerrdialogs --load-extension=/home/user/extension/,/home/user/kiosk/ --ignore-certificate-errors --auto-open-devtools-for-tabs --guest"' >> /etc/chromium/chromium.conf
 
 #RUN mkdir -p /var/lib/dbus && dbus-uuidgen > /var/lib/dbus/machine-id
 RUN chmod 777 /etc/chromium/

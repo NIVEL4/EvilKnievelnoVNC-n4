@@ -1,2 +1,7 @@
 Loot/*
 EvilnoVNC/tmp/*
+accesslog.txt
+submitlog.txt
+targets.json
+haproxy/whitelist.acl
+haproxy/blacklist.acl

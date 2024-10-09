@@ -54,7 +54,7 @@ dash2="controller/src/phishboard/interact.php"
 ## CLEANUP
 
 # usage: ./setup clean
-if [ $# -gt 0 ] && [ $1 = "clean" ]; then
+if [ $1 = "clean" ]; then
 	echo "[*] Cleaning up..."
 	rm -f $run && echo ./$run
 	rm -f $erun && echo $erun
@@ -62,11 +62,11 @@ if [ $# -gt 0 ] && [ $1 = "clean" ]; then
 	rm -f $hrun && echo $hrun
 	rm -f $dash1 && echo $dash1
 	rm -f $dash2 && echo $dash2
-	true > accesslog.txt && echo "accesslog.txt"
-	true > submitlog.txt && echo "submitlog.txt"
-	true > haproxy/whitelist.acl && echo "whitelist.acl"
-	true > haproxy/blacklist.acl && echo "blacklist.acl"
-	true > targets.json && echo "targets.json"
+	rm -f accesslog.txt && echo "accesslog.txt"
+	rm -f submitlog.txt && echo "submitlog.txt"
+	rm -f haproxy/whitelist.acl && echo "whitelist.acl"
+	rm -f haproxy/blacklist.acl && echo "blacklist.acl"
+	rm -f targets.json && echo "targets.json"
 	rm -rf Loot/* && echo "Loot/*"
 	rm -rf EvilnoVNC/tmp/* && echo "EvilnoVNC/tmp/*"
 	rm -rf EvilnoVNC/tmp/.*
@@ -86,6 +86,9 @@ command -v bash	    >/dev/null || { echo "[!] bash missing as dependency, exitin
 ## prepare Loot dir
 mkdir -p Loot
 chmod 777 Loot
+
+## create dynamic files
+touch accesslog.txt submitlog.txt targets.json haproxy/whitelist.acl haproxy/blacklist.acl
 
 ## set permissions
 chmod a+w *log.txt targets.json haproxy/*list.acl

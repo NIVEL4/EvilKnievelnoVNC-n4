@@ -90,5 +90,6 @@ Weaponized EvilnoVNC: scalable and semi-automated MFA-Phishing via "browser-in-t
 
 * [MultiEvilnoVNC](https://github.com/wanetty/MultiEvilnoVNC)
 * [CuddlePhish](https://github.com/fkasler/cuddlephish) using WebRTC
+* [NoPhish](https://github.com/powerseb/NoPhish)
 
 

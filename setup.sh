@@ -170,7 +170,12 @@ sudo docker network create evil
 perm=$(stat -L -c "%a" /var/run/docker.sock)
 [ ! $perm = "666" ] && sudo chmod 666 /var/run/docker.sock
 
-echo "[*] If there were no errors, you are ready to go! --> ./run.sh"
+echo "[*] If there were no errors, you are ready to go!"
+echo "[*] Start up all containers"
+echo -e "\t run each run.sh script from the following directories: controller, haproxy, EvilnoVNC"
+echo -e "\t (central run.sh start script is not fully testet yet)"
+echo -e "[*] Admin-Dashboard: \033[1;32m${aUrl}phishboard/\033[0m"
+echo -e "\t Add targets via 'Manage Targets'"
 exit
 
 ###############################################################

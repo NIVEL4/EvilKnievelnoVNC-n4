@@ -1,11 +1,13 @@
 #!/bin/bash
 if [ -z "$1" ]
 then
-        echo "Error, missing parameters:"
-        echo -e "\t $0 (<custom-URL>) <instance-number>"
-        echo -e "\t\t custom-URL is optional, see setup.sh"
-        echo -e "\t e.g. $0 01"
-        echo -e "\t or $0 \"https://target.com\" 01"
+        echo "Error: missing instance parameter"
+	echo "Usage:"
+        echo -e "\t $0 (<custom-URL>) <two digit instance number>"
+        echo -e "\t\t $0 01"
+        echo -e "\t\t $0 02"
+	echo -e "\t\t ..."
+        echo -e "\t\t custom-URL is optional, configure URL with setup.sh"
         exit 1
 fi
 

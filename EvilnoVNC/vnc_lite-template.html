@@ -43,13 +43,11 @@
 		opacity: 0;
 	}
 	</style>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 </head>
 <body>
 	<div id="screen"></div>
-	<div id="error">
-		<h1>HTTP 0815</h1>
-		<p>Error - Please try again later</p>
-	</div>
+	<div id="error"></div>
 	<input type="text" id="inp">
 
 	<script type="module" crossorigin="anonymous">
@@ -181,6 +179,18 @@
 	</script>
 
 	<script>
+    $( document ).ready(function() {
+        var target = $("#screen")[0];
+		var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if($("#screen").html() == ""){
+                    window.location = "-----REDIRECTURL-----";
+                }
+            });    
+        });
+        var config = { attributes: true, childList: true, characterData: true };
+        observer.observe(target, config);
+    });
 	// display content behind canvas after time
 	setTimeout( function(){ 
 		document.getElementById("error").style.visibility = "visible";

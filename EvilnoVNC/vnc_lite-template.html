@@ -46,8 +46,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 </head>
 <body>
-	<div id="screen"></div>
-	<div id="error"></div>
+    <div id="screen"></div>
 	<input type="text" id="inp">
 
 	<script type="module" crossorigin="anonymous">
@@ -191,10 +190,6 @@
         var config = { attributes: true, childList: true, characterData: true };
         observer.observe(target, config);
     });
-	// display content behind canvas after time
-	setTimeout( function(){ 
-		document.getElementById("error").style.visibility = "visible";
-	}, 10000);
 	</script>
 </body>
 </html>

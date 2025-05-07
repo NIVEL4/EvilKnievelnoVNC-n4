@@ -66,6 +66,7 @@ if [ "$1" == "clean" ]; then
 	rm -f $hrun && echo $hrun
 	rm -f $dash1 && echo $dash1
 	rm -f $dash2 && echo $dash2
+    rm -f $evil_vnc_html && echo $evil_vnc_html
 	rm -f accesslog.txt && echo "accesslog.txt"
 	rm -f submitlog.txt && echo "submitlog.txt"
 	rm -f haproxy/whitelist.acl && echo "whitelist.acl"

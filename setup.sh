@@ -108,14 +108,14 @@ cp EvilnoVNC/run-template.sh $erun
 cp EvilnoVNC/vnc_lite-template.html $evil_vnc_html
 chmod +x $erun
 sed -i "s#---tUrl---#$tUrl#" $erun
-sed -i "s/-----REDIRECTURL-----/$redirectURL/" $evil_vnc_html
+sed -i "s,-----REDIRECTURL-----,$redirectURL,g" $evil_vnc_html
 
 ## build haproxy config from template
 cp haproxy/haproxy-template.cfg $cfg
 sed -i "s/---adminPass---/$adminPass/" $cfg
 sed -i "s/---accessToken---/$accessToken/" $cfg
 sed -i "s/---cookieKey---/$cookieKey/" $cfg
-sed -i "s/-----REDIRECTURL-----/$redirectURL/" $cfg
+sed -i "s,-----REDIRECTURL-----,$redirectURL,g" $cfg
 
 ## build haproxy run script
 cp haproxy/run-template.sh $hrun

